@@ -31,7 +31,7 @@
           <div>
             <h1 class="text-xl font-bold tracking-wide">訃聞辨識建檔系統</h1>
             <p class="text-xs text-slate-400">
-              拍照上傳 ➔ AI辨識 ➔ 人工校對 ➔ 雲端硬碟歸檔
+              拍照上傳 ➔ AI智慧解析 ➔ 人工校對 ➔ 雲端歸檔
             </p>
           </div>
         </div>
@@ -41,7 +41,7 @@
           <span
             class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
           ></span>
-          <span class="text-slate-300">穩定版 (含全銜抬頭)</span>
+          <span class="text-slate-300">防幻覺高精準版</span>
         </div>
       </div>
     </header>
@@ -186,13 +186,13 @@
                 class="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 text-white rounded-lg font-medium text-sm transition flex items-center justify-center gap-2 shadow cursor-pointer"
               >
                 <span id="btnOcrSpinner" class="loading-spinner hidden"></span>
-                <span id="btnOcrText">✨ 開始 AI 智慧解析</span>
+                <span id="btnOcrText">✨開始辨識</span>
               </button>
             </div>
           </div>
         </div>
 
-        <!-- 右欄：人工校對表單 (擴充為 19 項資訊) -->
+        <!-- 右欄：人工校對表單 (共 19 項資訊) -->
         <div class="lg:col-span-7">
           <div
             class="bg-white rounded-xl shadow-sm border border-slate-200 p-5"
@@ -216,29 +216,29 @@
               onsubmit="saveToCloud(event)"
               class="space-y-4 text-xs"
             >
-              <!-- 姓名與全銜抬頭並列 -->
+              <!-- 姓名與輓聯抬頭並列 -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >往生者本名 *</label
+                    >往生者姓名 *</label
                   >
                   <input
                     type="text"
                     id="name"
                     required
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：陳大華"
+                    placeholder="請確認本名"
                   />
                 </div>
                 <div>
                   <label class="block font-semibold text-indigo-700 mb-1"
-                    >訃聞全銜 / 抬頭 (輓聯用) *</label
+                    >訃聞全銜 / 抬頭*</label
                   >
                   <input
                     type="text"
                     id="formalTitle"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-indigo-200 bg-indigo-50/30 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：陳公諱大華老先生 或 顯考陳公老先生"
+                    placeholder="例：陳公大華老先生"
                   />
                 </div>
               </div>
@@ -246,35 +246,35 @@
               <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >享壽 / 享年</label
+                    >年紀</label
                   >
                   <input
                     type="text"
                     id="age"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：享壽 86 歲"
+                    placeholder="例：86"
                   />
                 </div>
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >逝世公曆日期</label
+                    >過世日期</label
                   >
                   <input
                     type="text"
                     id="deathDate"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：2026年3月15日"
+                    placeholder="例：2026年9月8日"
                   />
                 </div>
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >告別式 / 出殯時間</label
+                    >出殯日期時間</label
                   >
                   <input
                     type="text"
                     id="serviceDate"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：2026年3月28日上午8時30分"
+                    placeholder="例：2026年9月23日 11:30"
                   />
                 </div>
               </div>
@@ -289,18 +289,18 @@
                     type="text"
                     id="location"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：高雄市第一殯儀館 景德廳"
+                    placeholder="舉行公奠之禮廳"
                   />
                 </div>
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >停靈地點</label
+                    >停靈地點 (靈堂設置處)</label
                   >
                   <input
                     type="text"
                     id="vigilLocation"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                    placeholder="例：自宅設靈 或 某某生命會館"
+                    placeholder="停靈處或靈堂(無則空白)"
                   />
                 </div>
               </div>
@@ -313,15 +313,18 @@
                   id="familyMembers"
                   rows="3"
                   class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none leading-relaxed"
-                  placeholder="例：孝男：陳志強、陳志明；孝女：陳美惠"
+                  placeholder="主要家屬名冊"
                 ></textarea>
               </div>
 
-              <!-- 電話資訊 -->
+              <!-- 電話資訊 (支援多支完整並列) -->
               <div class="border-t border-slate-100 pt-3">
-                <span class="block text-xs font-bold text-indigo-700 mb-2"
-                  >📞 聯絡電話資訊</span
-                >
+                <div class="flex items-center justify-between mb-2">
+                  <span class="block text-xs font-bold text-indigo-700"
+                    >📞 聯絡電話資訊</span
+                  >
+                  <span class="text-[11px] text-slate-400"></span>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div>
                     <label class="block font-semibold text-slate-700 mb-1"
@@ -342,7 +345,7 @@
                       type="text"
                       id="tel"
                       class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="例：381-1234"
+                      placeholder="多支以 / 分開"
                     />
                   </div>
                   <div>
@@ -353,17 +356,20 @@
                       type="text"
                       id="mobile"
                       class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="例：0912-345678"
+                      placeholder="多支以 / 分開"
                     />
                   </div>
                 </div>
               </div>
 
-              <!-- 地址結構化拆解 -->
+              <!-- 地址結構化拆解 (聯絡處優先) -->
               <div class="border-t border-slate-100 pt-3">
-                <span class="block text-xs font-bold text-indigo-700 mb-2"
-                  >📍 詳細地址</span
-                >
+                <div class="flex items-center justify-between mb-2">
+                  <span class="block text-xs font-bold text-indigo-700"
+                    >📍 詳細通訊地址</span
+                  >
+                  <span class="text-[11px] text-slate-400"></span>
+                </div>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
                   <div>
                     <label class="block font-semibold text-slate-700 mb-1"
@@ -374,7 +380,7 @@
                       id="city"
                       oninput="assembleAddress()"
                       class="w-full text-sm px-2.5 py-1.5 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="高雄市"
+                      placeholder="縣市"
                     />
                   </div>
                   <div>
@@ -386,7 +392,7 @@
                       id="district"
                       oninput="assembleAddress()"
                       class="w-full text-sm px-2.5 py-1.5 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="三民區"
+                      placeholder="區/鄉鎮"
                     />
                   </div>
                   <div>
@@ -398,7 +404,7 @@
                       id="village"
                       oninput="assembleAddress()"
                       class="w-full text-sm px-2.5 py-1.5 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="博愛里"
+                      placeholder="里/村"
                     />
                   </div>
                   <div>
@@ -410,7 +416,7 @@
                       id="street"
                       oninput="assembleAddress()"
                       class="w-full text-sm px-2.5 py-1.5 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                      placeholder="中正路100號"
+                      placeholder="路段門牌"
                     />
                   </div>
                 </div>
@@ -422,12 +428,12 @@
                     type="text"
                     id="fullAddress"
                     class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-slate-50"
-                    placeholder="完整地址全稱"
+                    placeholder="完整通訊地址全稱"
                   />
                 </div>
               </div>
 
-              <!-- 其他備註 -->
+              <!-- 其他備註 (留空手動填寫) -->
               <div class="border-t border-slate-100 pt-3">
                 <label class="block font-semibold text-slate-700 mb-1"
                   >其他事項 / 備註</label
@@ -436,7 +442,7 @@
                   type="text"
                   id="notes"
                   class="w-full text-sm px-3 py-2 border rounded-lg border-slate-300 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  placeholder="例：懇辭奠儀、花圈花籃等"
+                  placeholder="人工填寫註記"
                 />
               </div>
 
@@ -568,27 +574,50 @@
         const txt = document.getElementById("btnOcrText");
         btn.disabled = true;
         sp.classList.remove("hidden");
-        txt.innerText = "AI 正在辨識欄位中...";
+        txt.innerText = "辨識中...";
 
-        const prompt = `這是一張繁體中文訃聞。請解析所有內容並回傳純 JSON 格式。特別注意：「formalTitle」欄位是用來寫輓聯的完整訃聞抬頭/全銜稱謂，請照訃聞內文一字不漏完整抄錄（例如：顯考○公諱○○老先生、先慈○媽林太夫人、故○○○君 等），切勿簡寫。如果圖片中沒有提及某欄位，請回傳空字串 ""：
+        // 徹底去除具體假資料範例，增加負向禁止指令
+        const prompt = `你是一個嚴謹的繁體中文訃聞 OCR 資訊提取工具。請嚴格根據這張圖片中的真實文字進行提取，並輸出純 JSON 格式。
+
+【絕對真實性規範 (禁止任何幻想或捏造)】
+1. 嚴格禁止編造任何圖片中不存在的文字、姓名、地址、日期或電話。
+2. 只要圖片中沒有提及某項欄位，該鍵的值【必須直接填寫空字串 ""】，絕不可自行推理或帶入常識猜測。
+3. 嚴格禁止將說明文字中的字眼當作辨識結果輸出。
+
+【提取規則】
+- "name": 逝者本名（僅姓名本身）。
+- "formalTitle": 訃聞全銜/抬頭。必須過濾去除「顯考、顯妣、先慈、先考、諱」等字樣，僅保留敬稱稱謂主體。若圖中無全銜請填入本名。
+- "age": 年紀。提取享壽或享年數字，並統一轉換為純阿拉伯數字字串（若圖中未註明則填 ""）。
+- "deathDate": 逝世日期。換算為西元公曆，格式統一為「YYYY年M月D日」（若圖中無則填 ""）。
+- "serviceDate": 出殯/告別式時間。換算為西元公曆24小時制，格式統一為「YYYY年M月D日 HH:mm」（若無具體時間則僅填日期，若圖中無則填 ""）。
+- "location": 告別式地點。僅填寫舉行公奠出殯之禮廳會場（若圖中無則填 ""）。
+- "vigilLocation": 停靈地點。僅填寫平時停靈、守靈或靈堂設置處（若圖中未提及停靈處，一律填 ""，切勿重複填入告別式會場）。
+- "familyMembers": 主要家屬名冊條列（若圖中無則填 ""）。
+- "phoneAreaCode": 市話區碼（若有多組不同區碼請以 / 分隔，無則填 ""）。
+- "tel": 所有室內電話。請掃描全圖，若有兩支以上室話請全部列出，號碼間以斜線 " / " 分隔（無則填 ""）。
+- "mobile": 所有手機號碼。請掃描全圖，若有兩支以上手機請全部列出，號碼間以斜線 " / " 分隔（無則填 ""）。
+- "city", "district", "village", "street", "fullAddress": 詳細地址拆解與完整地址。若圖中同時出現治喪處與聯絡處/通訊處，一律優先提取【聯絡處地址】（無則填 ""）。
+- "notes": 必須固定回傳空字串 ""。
+
+請回傳符合下列鍵值的純 JSON 格式：
 {
-  "name": "往生者本名(僅姓名)",
-  "formalTitle": "訃聞正文對逝者的完整全銜抬頭(例如：顯考陳公諱大華老先生，供寫輓聯花聯使用)",
-  "age": "享年或享壽歲數",
-  "deathDate": "逝世公曆西元日期",
-  "serviceDate": "告別式或出殯時間",
-  "location": "告別式地點或出殯會場",
-  "vigilLocation": "停靈地點或靈堂設置處(如自宅設靈、某某會館，若無則空)",
-  "familyMembers": "主要家屬名冊條列",
-  "phoneAreaCode": "市話區碼(如02、04、07，若無則空)",
-  "tel": "室內電話號碼(不含區碼，若無則空)",
-  "mobile": "手機電話號碼(若無則空)",
-  "city": "地址的縣市(如台北市、高雄市)",
-  "district": "地址的區/市/鄉鎮(如三民區)",
-  "village": "地址的里/村(若無則空)",
-  "street": "門牌號碼或路段(如九如一路10號)",
-  "fullAddress": "完整通訊處或靈堂地址全稱",
-  "notes": "其他事項(如懇辭奠儀、花圈花籃等備註)"
+  "name": "",
+  "formalTitle": "",
+  "age": "",
+  "deathDate": "",
+  "serviceDate": "",
+  "location": "",
+  "vigilLocation": "",
+  "familyMembers": "",
+  "phoneAreaCode": "",
+  "tel": "",
+  "mobile": "",
+  "city": "",
+  "district": "",
+  "village": "",
+  "street": "",
+  "fullAddress": "",
+  "notes": ""
 }`;
 
         try {
@@ -608,7 +637,11 @@
                     ],
                   },
                 ],
-                generationConfig: { response_mime_type: "application/json" },
+                // 鎖定 temperature: 0，強制純事實謄抄，徹底杜絕幻覺
+                generationConfig: {
+                  response_mime_type: "application/json",
+                  temperature: 0,
+                },
               }),
             },
           );
@@ -640,19 +673,16 @@
           document.getElementById("street").value = result.street || "";
           document.getElementById("fullAddress").value =
             result.fullAddress || "";
-          document.getElementById("notes").value = result.notes || "";
+          document.getElementById("notes").value = "";
 
-          showStatus(
-            "AI 辨識完成！全銜抬頭與各欄位已填入，請校對。",
-            "text-emerald-600 font-medium",
-          );
+          showStatus("辨識完成！", "text-emerald-600 font-medium");
         } catch (err) {
           alert("AI 辨識失敗: " + err.message);
           showStatus("辨識失敗: " + err.message, "text-rose-600");
         } finally {
           btn.disabled = false;
           sp.classList.add("hidden");
-          txt.innerText = "✨ 開始 AI 智慧解析";
+          txt.innerText = "✨ 開始辨識";
         }
       }
 
