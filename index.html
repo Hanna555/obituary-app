@@ -41,7 +41,7 @@
           <span
             class="inline-block w-2 h-2 rounded-full bg-emerald-400 animate-pulse"
           ></span>
-          <span class="text-slate-300">穩定單圖版 (含停靈地點)</span>
+          <span class="text-slate-300">穩定版 (含全銜抬頭)</span>
         </div>
       </div>
     </header>
@@ -192,7 +192,7 @@
           </div>
         </div>
 
-        <!-- 右欄：人工校對表單 (擴充為 18 項資訊) -->
+        <!-- 右欄：人工校對表單 (擴充為 19 項資訊) -->
         <div class="lg:col-span-7">
           <div
             class="bg-white rounded-xl shadow-sm border border-slate-200 p-5"
@@ -216,10 +216,11 @@
               onsubmit="saveToCloud(event)"
               class="space-y-4 text-xs"
             >
+              <!-- 姓名與全銜抬頭並列 -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >往生者姓名 *</label
+                    >往生者本名 *</label
                   >
                   <input
                     type="text"
@@ -229,6 +230,20 @@
                     placeholder="例：陳大華"
                   />
                 </div>
+                <div>
+                  <label class="block font-semibold text-indigo-700 mb-1"
+                    >訃聞全銜 / 抬頭 (輓聯用) *</label
+                  >
+                  <input
+                    type="text"
+                    id="formalTitle"
+                    class="w-full text-sm px-3 py-2 border rounded-lg border-indigo-200 bg-indigo-50/30 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    placeholder="例：陳公諱大華老先生 或 顯考陳公老先生"
+                  />
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
                     >享壽 / 享年</label
@@ -240,12 +255,9 @@
                     placeholder="例：享壽 86 歲"
                   />
                 </div>
-              </div>
-
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label class="block font-semibold text-slate-700 mb-1"
-                    >逝世日期</label
+                    >逝世公曆日期</label
                   >
                   <input
                     type="text"
@@ -453,7 +465,6 @@
       </div>
     </main>
 
-    <!-- 隱形表單傳輸 iframe，保證不跳頁不崩潰 -->
     <iframe
       name="hidden_upload_frame"
       id="hidden_upload_frame"
@@ -541,7 +552,6 @@
         reader.readAsDataURL(file);
       }
 
-      // 呼叫 Gemini 進行結構化辨識 (已加入停靈地點 vigilLocation)
       async function startAiExtraction() {
         const apiKey = document.getElementById("geminiApiKey").value.trim();
         if (!apiKey) {
@@ -560,14 +570,15 @@
         sp.classList.remove("hidden");
         txt.innerText = "AI 正在辨識欄位中...";
 
-        const prompt = `這是一張繁體中文訃聞。請解析所有內容並回傳純 JSON 格式，特別注意將地點、電話與地址進行拆解。如果圖片中沒有提及某欄位，請回傳空字串 ""：
+        const prompt = `這是一張繁體中文訃聞。請解析所有內容並回傳純 JSON 格式。特別注意：「formalTitle」欄位是用來寫輓聯的完整訃聞抬頭/全銜稱謂，請照訃聞內文一字不漏完整抄錄（例如：顯考○公諱○○老先生、先慈○媽林太夫人、故○○○君 等），切勿簡寫。如果圖片中沒有提及某欄位，請回傳空字串 ""：
 {
-  "name": "往生者姓名",
+  "name": "往生者本名(僅姓名)",
+  "formalTitle": "訃聞正文對逝者的完整全銜抬頭(例如：顯考陳公諱大華老先生，供寫輓聯花聯使用)",
   "age": "享年或享壽歲數",
   "deathDate": "逝世公曆西元日期",
   "serviceDate": "告別式或出殯時間",
   "location": "告別式地點或出殯會場",
-  "vigilLocation": "停靈地點或靈堂設置處(如自宅設靈、某某生命會館，若無則填空字串)",
+  "vigilLocation": "停靈地點或靈堂設置處(如自宅設靈、某某會館，若無則空)",
   "familyMembers": "主要家屬名冊條列",
   "phoneAreaCode": "市話區碼(如02、04、07，若無則空)",
   "tel": "室內電話號碼(不含區碼，若無則空)",
@@ -608,6 +619,8 @@
           const result = JSON.parse(data.candidates[0].content.parts[0].text);
 
           document.getElementById("name").value = result.name || "";
+          document.getElementById("formalTitle").value =
+            result.formalTitle || "";
           document.getElementById("age").value = result.age || "";
           document.getElementById("deathDate").value = result.deathDate || "";
           document.getElementById("serviceDate").value =
@@ -630,7 +643,7 @@
           document.getElementById("notes").value = result.notes || "";
 
           showStatus(
-            "AI 辨識完成！所有欄位已填入，請校對。",
+            "AI 辨識完成！全銜抬頭與各欄位已填入，請校對。",
             "text-emerald-600 font-medium",
           );
         } catch (err) {
@@ -643,7 +656,6 @@
         }
       }
 
-      // 透過隱形 Form 表單發送，傳送 18 欄資料
       function saveToCloud(event) {
         event.preventDefault();
 
@@ -667,6 +679,7 @@
 
         const fields = {
           name: document.getElementById("name").value.trim(),
+          formalTitle: document.getElementById("formalTitle").value.trim(),
           age: document.getElementById("age").value.trim(),
           deathDate: document.getElementById("deathDate").value.trim(),
           serviceDate: document.getElementById("serviceDate").value.trim(),
