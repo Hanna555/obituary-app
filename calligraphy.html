@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>輓聯即時書寫名冊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-800 min-h-screen pb-12">
+    <!-- 頂部導航列 -->
+    <header class="bg-slate-900 text-white shadow-md sticky top-0 z-30">
+      <div
+        class="max-w-5xl mx-auto px-4 py-3.5 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-3">
+          <span class="text-2xl">✒️</span>
+          <div>
+            <h1 class="text-lg font-bold">輓聯即時作業名冊</h1>
+            <p class="text-xs text-slate-400">
+              年齡色標：70以下白 / 70~79粉紅 / 80以上正紅
+            </p>
+          </div>
+        </div>
+        <button
+          onclick="fetchList()"
+          class="flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold shadow transition active:scale-95 cursor-pointer"
+        >
+          <span id="refreshIcon">🔄</span> 重新整理清單
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6">
+      <!-- GAS 網址設定區 (只要貼一次便會儲存並自動隱藏) -->
+      <div
+        id="configBox"
+        class="mb-4 bg-white border border-slate-300 rounded-xl p-3.5 text-xs shadow-sm flex flex-col sm:flex-row items-center gap-3"
+      >
+        <span class="font-bold text-slate-700 whitespace-nowrap"
+          >後端 GAS 網址：</span
+        >
+        <input
+          type="text"
+          id="gasUrlInput"
+          placeholder="https://script.google.com/macros/s/.../exec"
+          class="flex-1 w-full px-3 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        />
+        <button
+          onclick="saveGasUrl()"
+          class="px-4 py-1.5 bg-slate-800 text-white rounded-lg font-medium whitespace-nowrap hover:bg-slate-700 transition"
+        >
+          儲存網址
+        </button>
+      </div>
+
+      <!-- 待處理統計與顏色圖例 -->
+      <div
+        class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 px-1"
+      >
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-slate-600">待書寫總數：</span>
+          <span
+            id="pendingCount"
+            class="text-sm font-bold bg-indigo-600 text-white px-2.5 py-0.5 rounded-full"
+            >0</span
+          >
+        </div>
+        <div class="flex items-center gap-3 text-xs font-medium">
+          <span class="flex items-center gap-1"
+            ><span
+              class="w-3 h-3 rounded bg-white border border-slate-400 inline-block shadow-sm"
+            ></span>
+            70歲以下 (白聯)</span
+          >
+          <span class="flex items-center gap-1"
+            ><span
+              class="w-3 h-3 rounded bg-pink-100 border border-pink-300 inline-block shadow-sm"
+            ></span>
+            70~79歲 (粉紅聯)</span
+          >
+          <span class="flex items-center gap-1"
+            ><span
+              class="w-3 h-3 rounded bg-rose-600 inline-block shadow-sm"
+            ></span>
+            80歲以上 (大紅聯)</span
+          >
+        </div>
+      </div>
+
+      <!-- 載入中動畫 -->
+      <div id="loading" class="text-center py-12 text-slate-400 hidden">
+        <div class="inline-block animate-spin text-3xl mb-2">⌛</div>
+        <p class="text-sm font-medium">正在取得待書寫名冊...</p>
+      </div>
+
+      <!-- 清單為空時的提示 -->
+      <div
+        id="emptyState"
+        class="hidden text-center py-16 bg-white rounded-2xl border border-slate-200 shadow-sm p-6"
+      >
+        <div class="text-4xl mb-3">🎉</div>
+        <h3 class="text-base font-bold text-slate-700">
+          目前沒有需要寫輓聯的名單！
+        </h3>
+        <p class="text-xs text-slate-400 mt-1">
+          所有建檔名冊均已完成或無需書寫，有新案件建檔後點擊右上角重新整理即可。
+        </p>
+      </div>
+
+      <!-- 名冊卡片容器 -->
+      <div id="cardContainer" class="space-y-4"></div>
+    </main>
+
+    <iframe
+      name="hidden_action_frame"
+      id="hidden_action_frame"
+      style="display: none"
+    ></iframe>
+
+    <script>
+      let currentGasUrl = "";
+
+      window.onload = function () {
+        currentGasUrl = localStorage.getItem("obituary_gas_url") || "";
+        if (currentGasUrl) {
+          document.getElementById("gasUrlInput").value = currentGasUrl;
+          document.getElementById("configBox").classList.add("hidden");
+        }
+        fetchList();
+      };
+
+      function saveGasUrl() {
+        const val = document.getElementById("gasUrlInput").value.trim();
+        if (!val) return alert("請輸入有效的 Apps Script 網址！");
+        localStorage.setItem("obituary_gas_url", val);
+        currentGasUrl = val;
+        document.getElementById("configBox").classList.add("hidden");
+        fetchList();
+      }
+
+      // 解析歲數數字 (例如從 "享壽 86 歲" 提取 86)
+      function parseAgeNumber(ageStr) {
+        if (!ageStr) return null;
+        const match = String(ageStr).match(/\d+/);
+        return match ? parseInt(match[0], 10) : null;
+      }
+
+      // 依年齡決定底色與文字色
+      function getAgeColorTheme(ageNum) {
+        if (ageNum === null) {
+          return {
+            cardBg: "bg-white border-slate-200",
+            tagBg: "bg-slate-100 text-slate-600 border border-slate-300",
+            desc: "未註明年齡",
+          };
+        }
+        if (ageNum < 70) {
+          return {
+            cardBg: "bg-white border-slate-300 shadow-sm",
+            tagBg:
+              "bg-slate-50 text-slate-800 border border-slate-300 font-bold",
+            desc: "白色聯 (70歲以下)",
+          };
+        } else if (ageNum >= 70 && ageNum < 80) {
+          return {
+            cardBg: "bg-pink-50/70 border-pink-300 shadow-sm",
+            tagBg: "bg-pink-100 text-pink-800 border border-pink-300 font-bold",
+            desc: "粉紅聯 (70~79歲)",
+          };
+        } else {
+          return {
+            cardBg: "bg-rose-50/70 border-rose-300 shadow-sm",
+            tagBg: "bg-rose-600 text-white border border-rose-700 font-bold",
+            desc: "大紅聯 (80歲以上)",
+          };
+        }
+      }
+
+      async function fetchList() {
+        if (!currentGasUrl) {
+          document.getElementById("configBox").classList.remove("hidden");
+          return;
+        }
+
+        const refreshIcon = document.getElementById("refreshIcon");
+        refreshIcon.classList.add("animate-spin");
+        document.getElementById("loading").classList.remove("hidden");
+        document.getElementById("emptyState").classList.add("hidden");
+        document.getElementById("cardContainer").innerHTML = "";
+
+        try {
+          const res = await fetch(currentGasUrl + "?t=" + new Date().getTime());
+          const list = await res.json();
+
+          document.getElementById("pendingCount").innerText = list.length;
+
+          if (!list || list.length === 0) {
+            document.getElementById("emptyState").classList.remove("hidden");
+            return;
+          }
+
+          renderCards(list);
+        } catch (err) {
+          alert("名單載入失敗，請確認 Apps Script 部署狀態: " + err.message);
+        } finally {
+          document.getElementById("loading").classList.add("hidden");
+          refreshIcon.classList.remove("animate-spin");
+        }
+      }
+
+      function renderCards(list) {
+        const container = document.getElementById("cardContainer");
+        container.innerHTML = "";
+
+        list.forEach((item) => {
+          const ageNum = parseAgeNumber(item.age);
+          const theme = getAgeColorTheme(ageNum);
+
+          const card = document.createElement("div");
+          card.id = "card-" + item.rowId;
+          card.className = `p-5 rounded-2xl border transition-all duration-300 hover:shadow-md ${theme.cardBg} flex flex-col lg:flex-row lg:items-center justify-between gap-5`;
+
+          card.innerHTML = `
+          <div class="flex-1 space-y-3">
+            <!-- 年齡標籤與列號 -->
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs px-2.5 py-1 rounded-md ${theme.tagBg}">
+                ${item.age} • ${theme.desc}
+              </span>
+              <span class="text-xs text-slate-500 font-mono">第 ${item.rowId} 列</span>
+            </div>
+
+            <!-- 輓聯全銜抬頭 (大字黑體供照抄) -->
+            <div>
+              <span class="text-xs text-slate-400 block mb-0.5">輓聯全銜 / 抬頭：</span>
+              <h2 class="text-2xl sm:text-3xl font-black tracking-wide text-slate-900 leading-tight">
+                ${item.formalTitle}
+              </h2>
+            </div>
+
+            <!-- 詳細資訊：出殯時間、停靈處、告別式地點 三者獨立分開顯示 -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs pt-1">
+              <!-- 出殯時間 -->
+              <div class="bg-white/80 p-2.5 rounded-lg border border-slate-200">
+                <span class="font-bold text-indigo-700 block mb-0.5">📅 出殯時間</span>
+                <span class="font-medium text-slate-800">${item.serviceDate || "未註明"}</span>
+              </div>
+
+              <!-- 停靈地點 (獨立) -->
+              <div class="bg-amber-50/80 p-2.5 rounded-lg border border-amber-200">
+                <span class="font-bold text-amber-800 block mb-0.5">🏠 停靈處 / 靈堂</span>
+                <span class="font-semibold text-slate-900">${item.vigilLocation || "未註明"}</span>
+              </div>
+
+              <!-- 告別式地點 (獨立) -->
+              <div class="bg-sky-50/80 p-2.5 rounded-lg border border-sky-200">
+                <span class="font-bold text-sky-800 block mb-0.5">🏛️ 告別式 / 禮廳</span>
+                <span class="font-semibold text-slate-900">${item.location || "未註明"}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- 操作按鈕區 -->
+          <div class="flex sm:flex-row lg:flex-col gap-2.5 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-200">
+            <button onclick="updateStatus(${item.rowId}, '已完成')" class="flex-1 lg:flex-none px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+              <span>✅</span> 已書寫完成
+            </button>
+            <button onclick="updateStatus(${item.rowId}, '不需處理')" class="flex-1 lg:flex-none px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-xl font-medium text-xs transition active:scale-95 flex items-center justify-center gap-1 cursor-pointer">
+              <span>🚫</span> 不需寫
+            </button>
+          </div>
+        `;
+          container.appendChild(card);
+        });
+      }
+
+      function updateStatus(rowId, newStatus) {
+        if (!confirm(`確定將此筆標記為【${newStatus}】嗎？`)) return;
+
+        const card = document.getElementById("card-" + rowId);
+        if (card) {
+          card.style.opacity = "0.3";
+          card.style.transform = "translateX(50px)";
+        }
+
+        const tempForm = document.createElement("form");
+        tempForm.action = currentGasUrl;
+        tempForm.method = "POST";
+        tempForm.target = "hidden_action_frame";
+
+        const fields = {
+          action: "updateStatus",
+          rowId: rowId,
+          newStatus: newStatus,
+        };
+
+        for (const key in fields) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = fields[key];
+          tempForm.appendChild(input);
+        }
+
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+        document.body.removeChild(tempForm);
+
+        setTimeout(() => {
+          if (card) card.remove();
+          const curCount = parseInt(
+            document.getElementById("pendingCount").innerText,
+            10,
+          );
+          const newCount = Math.max(0, curCount - 1);
+          document.getElementById("pendingCount").innerText = newCount;
+          if (newCount === 0) {
+            document.getElementById("emptyState").classList.remove("hidden");
+          }
+        }, 600);
+      }
+    </script>
+  </body>
+</html>
