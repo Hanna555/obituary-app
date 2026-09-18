@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>新興區里長通訊錄與聯絡待辦清單</title>
+    <title>新興區里長通訊錄及待辦</title>
     <style>
       :root {
         --primary: #0284c7;
@@ -412,17 +412,15 @@
 
       <header>
         <div class="header-top">
-          <h1>🏛️ 新興區里長通訊錄與待辦清單</h1>
+          <h1>🏛️ 新興區里長通訊錄及待辦清單</h1>
           <div class="actions">
             <button class="btn btn-primary" onclick="startNewRound()">
-              ➕ 開啟新一輪聯繫
+              ➕ 新一輪聯繫
             </button>
             <button class="btn btn-outline" onclick="loadData()">
               🔄 重新整理
             </button>
-            <button class="btn" onclick="toggleConfigPanel()">
-              ⚙️ 設定網址
-            </button>
+            <button class="btn" onclick="toggleConfigPanel()">⚙️ 設定</button>
           </div>
         </div>
 
@@ -456,7 +454,7 @@
           type="text"
           id="search-box"
           class="search-input"
-          placeholder="🔍 搜尋里名、姓名、電話、地址、備註、談資背景..."
+          placeholder="🔍 搜尋里名、姓名、電話、地址、備註、服務案件..."
         />
         <div class="filter-btn-group">
           <button class="filter-btn active" data-filter="all">全部</button>
@@ -765,20 +763,20 @@
 
           <div class="address-line"><strong>服務處地址：</strong>${item.address || "未提供"}</div>
 
-          <!-- 折疊抽屜：個人資訊與談資 -->
+          <!-- 折疊抽屜：個人資訊與服務案件 -->
           <details class="personal-details">
             <summary class="personal-summary">
-              <span>👤 個人背景與談資</span>
+              <span>👤 個人資訊與服務案件</span>
               <span style="font-size:0.75rem; color:#9333ea; font-weight:normal;">(點擊展開/編輯)</span>
             </summary>
             <div class="personal-content">
-              <textarea class="personal-textarea" placeholder="填寫該里長的個人背景、談資話題、溝通風格、人脈關係等...（編輯完點旁邊自動同步至 Sheet）" onblur="savePersonalInfo('${item.village}', this.value)">${pInfo.replace(/</g, "&lt;")}</textarea>
+              <textarea class="personal-textarea" placeholder="填寫該里長的個人背景、服務案件、溝通風格、人脈關係等...（編輯完點旁邊自動同步至 Sheet）" onblur="savePersonalInfo('${item.village}', this.value)">${pInfo.replace(/</g, "&lt;")}</textarea>
             </div>
           </details>
           
           <!-- 當前輪次備註 -->
           <div class="note-row">
-            <input type="text" class="note-input" value="${note.replace(/"/g, "&quot;")}" placeholder="點此輸入【${currentRound}】聯繫備忘（例如：約定下週會勘）..." onblur="saveNote('${item.village}', this.value)">
+            <input type="text" class="note-input" value="${note.replace(/"/g, "&quot;")}" placeholder="點此輸入【${currentRound}】聯繫備忘" onblur="saveNote('${item.village}', this.value)">
           </div>
         </div>
       `;
