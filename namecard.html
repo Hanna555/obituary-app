@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NexCard AI - 雙語名片人脈系統</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", "Noto Sans TC", sans-serif;
+      }
+      .spinner {
+        border: 2.5px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: #ffffff;
+        width: 1.15rem;
+        height: 1.15rem;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .custom-select {
+        background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+        background-position: right 0.65rem center;
+        background-repeat: no-repeat;
+        background-size: 1.25em 1.25em;
+        appearance: none;
+      }
+    </style>
+  </head>
+  <body
+    class="bg-[#F8FAFC] text-slate-800 min-h-screen pb-16 selection:bg-indigo-600 selection:text-white"
+  >
+    <!-- 頂部商務深色導覽列 -->
+    <header
+      class="bg-slate-900 text-white shadow-md sticky top-0 z-40 border-b border-slate-800"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between"
+      >
+        <div class="flex items-center space-x-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 via-indigo-600 to-sky-500 flex items-center justify-center text-white shadow-lg shadow-indigo-500/25"
+          >
+            <span class="text-xl">📇</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-bold text-lg tracking-tight text-white"
+                >NexCard AI</span
+              >
+              <span
+                class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                >Dual-Side Pro</span
+              >
+            </div>
+            <p class="text-[11px] text-slate-400">
+              雙面智慧解析 ➔ 雲端資料庫建檔
+            </p>
+          </div>
+        </div>
+
+        <button
+          onclick="toggleSettings()"
+          class="text-xs flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 transition shadow-sm cursor-pointer"
+        >
+          <span>⚙️</span>
+          <span>系統設定</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 mt-6">
+      <!-- 設定面板 -->
+      <div
+        id="settingsPanel"
+        class="hidden mb-6 bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm transition-all"
+      >
+        <div
+          class="flex items-center justify-between pb-3 mb-4 border-b border-slate-100"
+        >
+          <div class="flex items-center gap-2 text-sm font-bold text-slate-800">
+            <span>⚙️</span>
+            <span>API 金鑰與 Google Apps Script 連線配置</span>
+          </div>
+          <span class="text-xs text-slate-400">本機瀏覽器自動儲存</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1">
+              Gemini API Key
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                class="text-indigo-600 hover:underline ml-1 font-normal"
+                >取得金鑰</a
+              >
+            </label>
+            <input
+              type="password"
+              id="geminiApiKey"
+              placeholder="AIzaSy..."
+              class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 mb-1"
+              >Google Apps Script 網址 (/exec)</label
+            >
+            <input
+              type="text"
+              id="gasUrl"
+              placeholder="https://script.google.com/macros/s/.../exec"
+              class="w-full text-xs px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
+            />
+          </div>
+        </div>
+        <div class="mt-4 flex justify-between items-center">
+          <span id="cfgMsg" class="text-xs font-medium text-slate-500"></span>
+          <button
+            type="button"
+            onclick="saveSettings()"
+            class="text-xs bg-slate-900 hover:bg-slate-800 text-white font-semibold px-4 py-2 rounded-xl transition shadow-sm cursor-pointer"
+          >
+            記住設定
+          </button>
+        </div>
+      </div>
+
+      <!-- 核心雙欄佈局 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        <!-- 左欄：上傳與影像預覽 (保持正面必填 + 背面選填邏輯) -->
+        <div class="lg:col-span-5 space-y-4">
+          <div
+            class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm sticky top-20"
+          >
+            <div class="flex items-center justify-between mb-3">
+              <h2
+                class="text-sm font-bold text-slate-900 flex items-center gap-2"
+              >
+                <span class="w-2 h-2 rounded-full bg-indigo-600"></span>
+                <span>步驟 1：上傳名片照片</span>
+              </h2>
+              <span class="text-[11px] text-slate-400 font-medium"
+                >支援雙面互補</span
+              >
+            </div>
+
+            <!-- 正面 -->
+            <div class="mb-3">
+              <div class="flex justify-between items-center text-xs mb-1.5">
+                <span class="font-bold text-slate-700">名片正面 (必填)</span>
+                <span
+                  id="frontBadge"
+                  class="text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-medium"
+                  >尚未選取</span
+                >
+              </div>
+              <div
+                onclick="document.getElementById('fileFront').click()"
+                class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-4 text-center cursor-pointer transition group"
+              >
+                <input
+                  type="file"
+                  id="fileFront"
+                  accept="image/*"
+                  class="hidden"
+                  onchange="handleImage(event, 'front')"
+                />
+                <div id="frontPlaceholder" class="py-1">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl mx-auto mb-1.5 group-hover:scale-105 transition"
+                  >
+                    🖼️
+                  </div>
+                  <p
+                    class="text-xs font-bold text-slate-700 group-hover:text-indigo-600 transition"
+                  >
+                    點擊選取正面照片
+                  </p>
+                  <p class="text-[10px] text-slate-400 mt-0.5">
+                    中文或主要資訊面
+                  </p>
+                </div>
+                <img
+                  id="frontPreview"
+                  class="hidden max-h-36 mx-auto rounded-lg object-contain shadow-sm"
+                />
+              </div>
+            </div>
+
+            <!-- 背面 -->
+            <div class="mb-4">
+              <div class="flex justify-between items-center text-xs mb-1.5">
+                <span class="font-bold text-slate-700"
+                  >名片背面 (選填，無則免填)</span
+                >
+                <button
+                  type="button"
+                  onclick="clearBackImage(event)"
+                  id="btnClearBack"
+                  class="hidden text-[10px] text-rose-500 hover:underline"
+                >
+                  清除背面
+                </button>
+              </div>
+              <div
+                onclick="document.getElementById('fileBack').click()"
+                class="border-2 border-dashed border-slate-300 hover:border-indigo-500 bg-slate-50/70 hover:bg-indigo-50/30 rounded-2xl p-4 text-center cursor-pointer transition group"
+              >
+                <input
+                  type="file"
+                  id="fileBack"
+                  accept="image/*"
+                  class="hidden"
+                  onchange="handleImage(event, 'back')"
+                />
+                <div id="backPlaceholder" class="py-1">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-white shadow-sm flex items-center justify-center text-xl mx-auto mb-1.5 group-hover:scale-105 transition"
+                  >
+                    🔄
+                  </div>
+                  <p
+                    class="text-xs font-bold text-slate-600 group-hover:text-indigo-600 transition"
+                  >
+                    點擊加入背面照片
+                  </p>
+                  <p class="text-[10px] text-slate-400 mt-0.5">
+                    英文面或備註面
+                  </p>
+                </div>
+                <img
+                  id="backPreview"
+                  class="hidden max-h-36 mx-auto rounded-lg object-contain shadow-sm"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              id="btnExtract"
+              onclick="startExtraction()"
+              disabled
+              class="w-full py-3 px-4 rounded-xl font-bold text-xs text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <span id="btnSpinner" class="spinner hidden"></span>
+              <span id="btnText">✨ 開始 AI 雙面智慧解析</span>
+            </button>
+            <div
+              id="aiStatus"
+              class="mt-2 text-center text-xs font-semibold text-slate-500 min-h-[18px]"
+            ></div>
+          </div>
+        </div>
+
+        <!-- 右欄：結構化校對表單 -->
+        <div class="lg:col-span-7">
+          <div
+            class="bg-white rounded-2xl border border-slate-200/80 shadow-sm p-6"
+          >
+            <div
+              class="flex items-center justify-between pb-3 mb-5 border-b border-slate-100"
+            >
+              <h2
+                class="text-sm font-bold text-slate-900 flex items-center gap-2"
+              >
+                <span>✍️</span>
+                <span>步驟 2：校對名片與人脈標籤</span>
+              </h2>
+              <span
+                class="text-xs px-2.5 py-1 bg-amber-50 text-amber-700 border border-amber-200/80 rounded-full font-medium"
+                >確認無誤後儲存</span
+              >
+            </div>
+
+            <form
+              id="cardForm"
+              onsubmit="submitCard(event)"
+              class="space-y-5 text-xs"
+            >
+              <!-- 區塊 1: 身分與職務 -->
+              <div class="space-y-3">
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block"
+                  >👤 基本身分與職務</span
+                >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >中文姓名 *</label
+                    >
+                    <input
+                      type="text"
+                      id="name_zh"
+                      required
+                      class="w-full text-xs font-bold px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >英文姓名</label
+                    >
+                    <input
+                      type="text"
+                      id="name_en"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >稱謂</label
+                    >
+                    <input
+                      type="text"
+                      id="salutation"
+                      placeholder="先生 / 女士 / Mr."
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >中文職稱 *</label
+                    >
+                    <input
+                      type="text"
+                      id="title_zh"
+                      required
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >英文職稱</label
+                    >
+                    <input
+                      type="text"
+                      id="title_en"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >中文部門</label
+                    >
+                    <input
+                      type="text"
+                      id="dept_zh"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >英文部門</label
+                    >
+                    <input
+                      type="text"
+                      id="dept_en"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- 區塊 2: 組織單位 -->
+              <div class="space-y-3 pt-3 border-t border-slate-100">
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider text-slate-700 block"
+                  >🏢 所屬公司 / 機構</span
+                >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >中文公司全銜 *</label
+                    >
+                    <input
+                      type="text"
+                      id="company_name_zh"
+                      required
+                      class="w-full text-xs font-bold px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >英文公司全銜</label
+                    >
+                    <input
+                      type="text"
+                      id="company_name_en"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >統一編號 (統編)</label
+                    >
+                    <input
+                      type="text"
+                      id="tax_id"
+                      placeholder="8碼數字"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- 區塊 3: 通訊管道 -->
+              <div class="space-y-3 pt-3 border-t border-slate-100">
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider text-slate-700 block"
+                  >📞 通訊與社群管道</span
+                >
+                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+                  <div class="col-span-2 sm:col-span-1">
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >手機號碼</label
+                    >
+                    <input
+                      type="text"
+                      id="mobile"
+                      class="w-full text-xs px-2.5 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >區碼</label
+                    >
+                    <input
+                      type="text"
+                      id="tel_area"
+                      placeholder="07"
+                      class="w-full text-xs px-2.5 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >工作電話</label
+                    >
+                    <input
+                      type="text"
+                      id="tel_work"
+                      class="w-full text-xs px-2.5 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >分機</label
+                    >
+                    <input
+                      type="text"
+                      id="tel_ext"
+                      placeholder="802"
+                      class="w-full text-xs px-2.5 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >傳真</label
+                    >
+                    <input
+                      type="text"
+                      id="fax"
+                      class="w-full text-xs px-2.5 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >主要 Email</label
+                    >
+                    <input
+                      type="text"
+                      id="email"
+                      class="w-full text-xs px-3 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >次要 Email</label
+                    >
+                    <input
+                      type="text"
+                      id="email_secondary"
+                      class="w-full text-xs px-3 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >LINE ID</label
+                    ><input
+                      type="text"
+                      id="line_id"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >WeChat ID</label
+                    ><input
+                      type="text"
+                      id="wechat_id"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >WhatsApp</label
+                    ><input
+                      type="text"
+                      id="whatsapp"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >Telegram</label
+                    ><input
+                      type="text"
+                      id="telegram"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >LinkedIn</label
+                    ><input
+                      type="text"
+                      id="linkedin"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >Facebook</label
+                    ><input
+                      type="text"
+                      id="facebook"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >Instagram</label
+                    ><input
+                      type="text"
+                      id="instagram"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-[10px] font-semibold text-slate-500 mb-0.5"
+                      >X (Twitter)</label
+                    ><input
+                      type="text"
+                      id="x_twitter"
+                      class="w-full text-xs px-2 py-1 bg-slate-50/70 border border-slate-200 rounded focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- 區塊 4: 地址定位 -->
+              <div class="space-y-3 pt-3 border-t border-slate-100">
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider text-slate-700 block"
+                  >📍 地址定位 (中/英)</span
+                >
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >縣市</label
+                    >
+                    <input
+                      type="text"
+                      id="address_city"
+                      placeholder="高雄市"
+                      class="w-full text-xs px-3 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >行政區</label
+                    >
+                    <input
+                      type="text"
+                      id="address_dist"
+                      placeholder="鼓山區"
+                      class="w-full text-xs px-3 py-1.5 bg-slate-50/70 border border-slate-200 rounded-lg focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <input
+                    type="text"
+                    id="address_full_zh"
+                    placeholder="中文完整地址"
+                    class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    id="address_full_en"
+                    placeholder="英文完整地址"
+                    class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <!-- 區塊 5: 人脈管理標籤 (改為高質感自訂下拉選單) -->
+              <div class="space-y-3 pt-3 border-t border-slate-100">
+                <span
+                  class="text-[11px] font-bold uppercase tracking-wider text-indigo-600 block"
+                  >🏷️ 人脈歸檔與等級設定</span
+                >
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <!-- 關係等級下拉選單 -->
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >關係等級 (Tier) *</label
+                    >
+                    <select
+                      id="tier"
+                      class="custom-select w-full text-xs font-bold px-3 py-2 bg-indigo-50/60 border border-indigo-200 text-indigo-700 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                    >
+                      <option value="一般" selected>
+                        👤 一般日常聯繫 (Standard)
+                      </option>
+                      <option value="VIP">⭐ VIP 重要關係人 (VIP)</option>
+                      <option value="核心">
+                        🤝 核心合作夥伴 (Core Partner)
+                      </option>
+                      <option value="潛在拜訪">
+                        🎯 潛在拜訪對象 (Prospect)
+                      </option>
+                      <option value="公部門">🏛️ 公部門/機關窗口 (Gov)</option>
+                      <option value="地方社團">
+                        👥 地區/民間社團 (Community)
+                      </option>
+                    </select>
+                  </div>
+
+                  <!-- 人脈群組下拉選單 -->
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >人脈群組 (Group) *</label
+                    >
+                    <select
+                      id="group_hint"
+                      class="custom-select w-full text-xs font-semibold px-3 py-2 bg-slate-50/70 border border-slate-200 text-slate-700 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer"
+                    >
+                      <option value="產業界窗口" selected>🏭 產業界窗口</option>
+                      <option value="公部門/政府機關">
+                        🏛️ 公部門 / 政府機關
+                      </option>
+                      <option value="半導體供應鏈">⚡ 半導體 / 科技業</option>
+                      <option value="商務合作夥伴">💼 商務 / 業務合作</option>
+                      <option value="民間友好人士">
+                        🤝 地區社團 / 民間好友
+                      </option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >產業標籤</label
+                    >
+                    <input
+                      type="text"
+                      id="industry_tags"
+                      placeholder="半導體; 綠能"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >公司官方網站</label
+                    >
+                    <input
+                      type="text"
+                      id="website"
+                      placeholder="https://..."
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label class="block font-bold text-slate-700 mb-1"
+                      >其他社群 / 管道</label
+                    >
+                    <input
+                      type="text"
+                      id="other_social"
+                      placeholder="Threads / YouTube 等"
+                      class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block font-bold text-slate-700 mb-1"
+                    >互動備忘與人脈筆記 (手動輸入)</label
+                  >
+                  <input
+                    type="text"
+                    id="notes"
+                    placeholder="論壇交換名片、洽談專案或回訪備忘..."
+                    class="w-full text-xs px-3 py-2 bg-slate-50/70 border border-slate-200 rounded-xl focus:bg-white focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <!-- 存檔按鈕列 -->
+              <div
+                class="pt-4 border-t border-slate-100 flex items-center justify-between gap-4"
+              >
+                <div
+                  id="submitStatusMsg"
+                  class="text-xs font-bold text-slate-500 truncate max-w-sm"
+                ></div>
+                <button
+                  type="submit"
+                  id="btnSubmit"
+                  class="px-7 py-3 rounded-xl font-bold text-xs text-white bg-emerald-600 hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 flex items-center gap-2 cursor-pointer"
+                >
+                  <span id="saveSpinner" class="spinner hidden"></span>
+                  <span id="saveText">💾 確認校對無誤，存入 Google 試算表</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 驗證穩定的隱藏式 iframe 傳輸機制 -->
+    <iframe
+      name="hidden_upload_frame"
+      id="hidden_upload_frame"
+      style="display: none"
+    ></iframe>
+
+    <script>
+      let frontBase64 = "",
+        backBase64 = "";
+      let rawTextCombined = "";
+
+      window.onload = function () {
+        try {
+          const savedKey =
+            localStorage.getItem("card_gemini_key") ||
+            localStorage.getItem("obituary_gemini_key") ||
+            localStorage.getItem("nexcard_gemini_key");
+          const savedGas =
+            localStorage.getItem("card_gas_url") ||
+            localStorage.getItem("obituary_gas_url") ||
+            localStorage.getItem("nexcard_gas_url");
+          if (savedKey)
+            document.getElementById("geminiApiKey").value = savedKey;
+          if (savedGas) document.getElementById("gasUrl").value = savedGas;
+        } catch (e) {}
+      };
+
+      function toggleSettings() {
+        document.getElementById("settingsPanel").classList.toggle("hidden");
+      }
+
+      function saveSettings() {
+        const k = document.getElementById("geminiApiKey").value.trim();
+        const g = document.getElementById("gasUrl").value.trim();
+        localStorage.setItem("card_gemini_key", k);
+        localStorage.setItem("card_gas_url", g);
+        document.getElementById("cfgMsg").innerText = "✅ 設定已儲存！";
+        setTimeout(() => toggleSettings(), 800);
+      }
+
+      // 影像前處理 (1000px, 0.65品質，兼顧字體清晰與表單容量)
+      function handleImage(event, side) {
+        const file = event.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          const img = new Image();
+          img.onload = function () {
+            const canvas = document.createElement("canvas");
+            let width = img.width,
+              height = img.height;
+            const maxDim = 1000;
+
+            if (width > maxDim || height > maxDim) {
+              if (width > height) {
+                height = Math.round((height * maxDim) / width);
+                width = maxDim;
+              } else {
+                width = Math.round((width * maxDim) / height);
+                height = maxDim;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const compressed = canvas.toDataURL("image/jpeg", 0.65);
+            const base64Data = compressed.split(",")[1];
+
+            if (side === "front") {
+              frontBase64 = base64Data;
+              document.getElementById("frontPreview").src = compressed;
+              document
+                .getElementById("frontPreview")
+                .classList.remove("hidden");
+              document
+                .getElementById("frontPlaceholder")
+                .classList.add("hidden");
+              document.getElementById("frontBadge").innerText = "正面已就緒";
+              document.getElementById("frontBadge").className =
+                "text-[10px] text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md font-bold";
+              document.getElementById("btnExtract").disabled = false;
+            } else {
+              backBase64 = base64Data;
+              document.getElementById("backPreview").src = compressed;
+              document.getElementById("backPreview").classList.remove("hidden");
+              document
+                .getElementById("backPlaceholder")
+                .classList.add("hidden");
+              document
+                .getElementById("btnClearBack")
+                .classList.remove("hidden");
+            }
+          };
+          img.src = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function clearBackImage(event) {
+        event.stopPropagation();
+        backBase64 = "";
+        document.getElementById("fileBack").value = "";
+        document.getElementById("backPreview").src = "";
+        document.getElementById("backPreview").classList.add("hidden");
+        document.getElementById("backPlaceholder").classList.remove("hidden");
+        document.getElementById("btnClearBack").classList.add("hidden");
+      }
+
+      async function startExtraction() {
+        const apiKey = document.getElementById("geminiApiKey").value.trim();
+        if (!apiKey)
+          return alert("請先在右上角「系統設定」填入 Gemini API Key！");
+        if (!frontBase64) return alert("請至少上傳名片正面！");
+
+        const btn = document.getElementById("btnExtract");
+        const sp = document.getElementById("btnSpinner");
+        const txt = document.getElementById("btnText");
+        const status = document.getElementById("aiStatus");
+
+        btn.disabled = true;
+        sp.classList.remove("hidden");
+        txt.innerText = "AI 解析中...";
+        status.innerText = backBase64
+          ? "正進行雙面跨面互補解析..."
+          : "正在解析正面資訊...";
+
+        const prompt = `你是一個嚴謹的雙語名片 OCR 資訊提取工具。
+使用者提供 1 張或 2 張名片圖片。請提取真實文字，若為雙語請中英互補，並回傳純 JSON 格式。
+【規範】嚴格禁止捏造不存在之資訊，無提及者一律填空字串 ""。
+
+{
+  "name_zh": "", "name_en": "", "salutation": "", "company_name_zh": "", "company_name_en": "",
+  "tax_id": "", "dept_zh": "", "dept_en": "", "title_zh": "", "title_en": "",
+  "mobile": "", "tel_area": "", "tel_work": "", "tel_ext": "", "fax": "",
+  "email": "", "email_secondary": "", "line_id": "", "wechat_id": "", "whatsapp": "",
+  "telegram": "", "linkedin": "", "facebook": "", "instagram": "", "x_twitter": "", "other_social": "",
+  "address_city": "", "address_dist": "", "address_full_zh": "", "address_full_en": "",
+  "website": "", "group_hint": "產業界窗口", "industry_tags": "", "notes": "", "tier": "一般", "raw_text": ""
+}`;
+
+        const parts = [{ text: prompt }];
+        parts.push({
+          inline_data: { mime_type: "image/jpeg", data: frontBase64 },
+        });
+        if (backBase64)
+          parts.push({
+            inline_data: { mime_type: "image/jpeg", data: backBase64 },
+          });
+
+        try {
+          const res = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{ parts: parts }],
+                generationConfig: {
+                  response_mime_type: "application/json",
+                  temperature: 0,
+                },
+              }),
+            },
+          );
+
+          const data = await res.json();
+          if (data.error) throw new Error(data.error.message);
+
+          const r = JSON.parse(data.candidates[0].content.parts[0].text);
+          rawTextCombined = r.raw_text || "";
+
+          const fields = [
+            "name_zh",
+            "name_en",
+            "salutation",
+            "company_name_zh",
+            "company_name_en",
+            "tax_id",
+            "dept_zh",
+            "dept_en",
+            "title_zh",
+            "title_en",
+            "mobile",
+            "tel_area",
+            "tel_work",
+            "tel_ext",
+            "fax",
+            "email",
+            "email_secondary",
+            "line_id",
+            "wechat_id",
+            "whatsapp",
+            "telegram",
+            "linkedin",
+            "facebook",
+            "instagram",
+            "x_twitter",
+            "other_social",
+            "address_city",
+            "address_dist",
+            "industry_tags",
+            "address_full_zh",
+            "address_full_en",
+            "website",
+          ];
+          fields.forEach((k) => {
+            const el = document.getElementById(k);
+            if (el && r[k] !== undefined) el.value = r[k] || "";
+          });
+
+          // 若辨識出的等級或群組有符合選項則自動帶入
+          if (r.tier && document.getElementById("tier")) {
+            const tOptions = Array.from(
+              document.getElementById("tier").options,
+            ).map((o) => o.value);
+            if (tOptions.includes(r.tier))
+              document.getElementById("tier").value = r.tier;
+          }
+          if (r.group_hint && document.getElementById("group_hint")) {
+            const gOptions = Array.from(
+              document.getElementById("group_hint").options,
+            ).map((o) => o.value);
+            if (gOptions.includes(r.group_hint))
+              document.getElementById("group_hint").value = r.group_hint;
+          }
+
+          status.innerText = "✅ 辨識完成！已自動對應欄位，請在右側核對確認。";
+          status.className =
+            "mt-2 text-center text-xs font-bold text-emerald-600";
+        } catch (err) {
+          status.innerText = "❌ 辨識失敗：" + err.message;
+          status.className = "mt-2 text-center text-xs font-bold text-rose-600";
+        } finally {
+          btn.disabled = false;
+          sp.classList.add("hidden");
+          txt.innerText = "✨ 開始 AI 雙面智慧解析";
+        }
+      }
+
+      function submitCard(event) {
+        event.preventDefault();
+        const gasUrl = document.getElementById("gasUrl").value.trim();
+        if (!gasUrl)
+          return alert(
+            "請先在右上角「系統設定」填入 Google Apps Script 網址！",
+          );
+
+        const btn = document.getElementById("btnSubmit");
+        const sp = document.getElementById("saveSpinner");
+        const txt = document.getElementById("saveText");
+        const msg = document.getElementById("submitStatusMsg");
+
+        btn.disabled = true;
+        sp.classList.remove("hidden");
+        txt.innerText = "儲存中...";
+
+        const tempForm = document.createElement("form");
+        tempForm.action = gasUrl;
+        tempForm.method = "POST";
+        tempForm.target = "hidden_upload_frame";
+
+        const fields = [
+          "name_zh",
+          "name_en",
+          "salutation",
+          "company_name_zh",
+          "company_name_en",
+          "tax_id",
+          "dept_zh",
+          "dept_en",
+          "tier",
+          "title_zh",
+          "title_en",
+          "group_hint",
+          "mobile",
+          "tel_area",
+          "tel_work",
+          "tel_ext",
+          "fax",
+          "email",
+          "email_secondary",
+          "line_id",
+          "wechat_id",
+          "whatsapp",
+          "telegram",
+          "linkedin",
+          "facebook",
+          "instagram",
+          "x_twitter",
+          "other_social",
+          "address_city",
+          "address_dist",
+          "industry_tags",
+          "address_full_zh",
+          "address_full_en",
+          "website",
+          "notes",
+        ];
+
+        fields.forEach((k) => {
+          const el = document.getElementById(k);
+          const inp = document.createElement("input");
+          inp.type = "hidden";
+          inp.name = k;
+          inp.value = el ? el.value.trim() : "";
+          tempForm.appendChild(inp);
+        });
+
+        // 雙面照片
+        const inpFront = document.createElement("input");
+        inpFront.type = "hidden";
+        inpFront.name = "image_front";
+        inpFront.value = frontBase64;
+        tempForm.appendChild(inpFront);
+
+        const inpBack = document.createElement("input");
+        inpBack.type = "hidden";
+        inpBack.name = "image_back";
+        inpBack.value = backBase64;
+        tempForm.appendChild(inpBack);
+
+        const inpRaw = document.createElement("input");
+        inpRaw.type = "hidden";
+        inpRaw.name = "raw_text";
+        inpRaw.value = rawTextCombined;
+        tempForm.appendChild(inpRaw);
+
+        document.body.appendChild(tempForm);
+        tempForm.submit();
+        document.body.removeChild(tempForm);
+
+        setTimeout(() => {
+          alert("🎉 資料已成功寫入 Google 試算表！");
+          msg.innerText = "✅ 已成功追加至試算表與 Drive！";
+          msg.className =
+            "text-xs font-bold text-emerald-600 truncate max-w-sm";
+
+          document.getElementById("cardForm").reset();
+          document.getElementById("frontPreview").src = "";
+          document.getElementById("frontPreview").classList.add("hidden");
+          document
+            .getElementById("frontPlaceholder")
+            .classList.remove("hidden");
+          document.getElementById("frontBadge").innerText = "尚未選取";
+          document.getElementById("frontBadge").className =
+            "text-[10px] text-amber-600 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md font-medium";
+
+          clearBackImage(event);
+          frontBase64 = "";
+          backBase64 = "";
+          document.getElementById("btnExtract").disabled = true;
+
+          btn.disabled = false;
+          sp.classList.add("hidden");
+          txt.innerText = "💾 確認校對無誤，存入 Google 試算表";
+        }, 1500);
+      }
+    </script>
+  </body>
+</html>
