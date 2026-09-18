@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>新興區里長聯絡追蹤清單</title>
+    <title>新興區里長通訊錄與聯絡待辦清單</title>
     <style>
       :root {
         --primary: #0284c7;
@@ -29,11 +29,11 @@
         line-height: 1.5;
       }
       .container {
-        max-width: 860px;
+        max-width: 920px;
         margin: 0 auto;
       }
 
-      /* 頂部設定條（未設定或需要修改網址時顯示） */
+      /* 設定面板 */
       .config-panel {
         background: #eff6ff;
         border: 1px solid #bfdbfe;
@@ -204,20 +204,25 @@
         font-weight: 600;
       }
 
+      /* 卡片清單 */
       .checklist {
         display: flex;
         flex-direction: column;
-        gap: 10px;
+        gap: 12px;
       }
       .card {
         background: var(--card-bg);
         border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 14px;
+        border-radius: 12px;
+        padding: 16px;
         display: flex;
-        gap: 12px;
+        gap: 14px;
         align-items: flex-start;
         transition: all 0.2s;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
+      }
+      .card:hover {
+        border-color: #94a3b8;
       }
       .custom-cb {
         width: 22px;
@@ -229,22 +234,31 @@
       .card-body {
         flex: 1;
       }
+
       .card-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 6px;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 8px;
       }
       .village-title {
-        font-size: 1.15rem;
+        font-size: 1.2rem;
         font-weight: 700;
         display: flex;
         align-items: center;
         gap: 8px;
       }
+
+      .badge-group {
+        display: flex;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
       .badge {
         font-size: 0.75rem;
-        padding: 2px 6px;
+        padding: 2px 7px;
         border-radius: 4px;
         font-weight: 600;
       }
@@ -254,19 +268,29 @@
       }
       .badge-party {
         background: #f1f5f9;
-        color: #475569;
+        color: #334155;
       }
       .badge-term {
         background: #fef3c7;
         color: #92400e;
       }
+      .badge-unopposed {
+        background: #fce7f3;
+        color: #be185d;
+      }
 
+      /* 資訊網格 */
       .info-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 4px 12px;
+        grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+        gap: 6px 14px;
         font-size: 0.88rem;
-        margin-top: 6px;
+        margin-top: 8px;
+      }
+      .info-item strong {
+        color: #64748b;
+        font-weight: 600;
+        margin-right: 4px;
       }
       .phone-link {
         color: var(--primary);
@@ -277,11 +301,58 @@
         text-decoration: underline;
       }
       .address-line {
-        margin-top: 6px;
-        font-size: 0.85rem;
-        color: #475569;
+        margin-top: 8px;
+        font-size: 0.88rem;
+        color: #334155;
       }
 
+      /* 折疊抽屜：個人資訊與談資 */
+      .personal-details {
+        margin-top: 10px;
+        border: 1px solid #e0e7ff;
+        background: #faf5ff;
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .personal-summary {
+        padding: 7px 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #6b21a8;
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        outline: none;
+        background: #f3e8ff;
+        transition: 0.2s;
+      }
+      .personal-summary:hover {
+        background: #e9d5ff;
+      }
+      .personal-content {
+        padding: 10px;
+      }
+      .personal-textarea {
+        width: 100%;
+        border: 1px solid #d8b4fe;
+        background: white;
+        padding: 8px 10px;
+        border-radius: 6px;
+        font-size: 0.88rem;
+        color: #3b0764;
+        outline: none;
+        min-height: 60px;
+        resize: vertical;
+        line-height: 1.4;
+      }
+      .personal-textarea:focus {
+        border-color: #9333ea;
+        box-shadow: 0 0 0 2px rgba(147, 51, 234, 0.15);
+      }
+
+      /* 當前輪次聯繫備註 */
       .note-row {
         margin-top: 10px;
         padding-top: 8px;
@@ -341,7 +412,7 @@
 
       <header>
         <div class="header-top">
-          <h1>🏛️ 新興區里長聯絡追蹤清單</h1>
+          <h1>🏛️ 新興區里長通訊錄與待辦清單</h1>
           <div class="actions">
             <button class="btn btn-primary" onclick="startNewRound()">
               ➕ 開啟新一輪聯繫
@@ -357,7 +428,7 @@
 
         <div class="round-bar">
           <label for="round-select" style="font-size: 0.9rem; font-weight: 600"
-            >當前輪次：</label
+            >當前聯繫輪次：</label
           >
           <select
             id="round-select"
@@ -385,7 +456,7 @@
           type="text"
           id="search-box"
           class="search-input"
-          placeholder="🔍 搜尋里名、姓名、電話、地址、備註..."
+          placeholder="🔍 搜尋里名、姓名、電話、地址、備註、談資背景..."
         />
         <div class="filter-btn-group">
           <button class="filter-btn active" data-filter="all">全部</button>
@@ -429,7 +500,7 @@
         loadData();
       }
 
-      // 通訊核心：優先使用 Fetch，失敗自動切換為 JSONP（防止瀏覽器 CORS 阻擋）
+      // 通訊核心：以 JSONP 為主（避免本地 file:/// 被瀏覽器阻擋）
       async function callGAS(params = {}) {
         const baseUrl = getSavedUrl();
         if (!baseUrl) throw new Error("NO_URL");
@@ -438,16 +509,6 @@
         Object.keys(params).forEach((k) =>
           url.searchParams.append(k, params[k]),
         );
-
-        try {
-          const res = await fetch(url.toString(), {
-            method: "GET",
-            mode: "cors",
-          });
-          if (res.ok) return await res.json();
-        } catch (e) {
-          // Fetch 失敗時靜默轉交 JSONP
-        }
 
         return new Promise((resolve, reject) => {
           const cb =
@@ -512,7 +573,6 @@
           contacts = data.contacts || [];
           rounds = data.rounds || [];
 
-          // 若為全新表格無輪次欄位，自動發起第 1 輪
           if (rounds.length === 0) {
             await startNewRound(true);
             return;
@@ -530,7 +590,7 @@
           document.getElementById("checklist").innerHTML =
             `<div class="loading-notice" style="color:#ef4444; line-height:1.8;">
           ❌ 連線失敗：${err.message}<br>
-          請點擊右上角「⚙️ 設定網址」確認網址是否正確，並確保 Apps Script 部署權限為「所有人」。
+          請確認 Apps Script 部署版本是否為最新，且權限設為「所有人」。
         </div>`;
         }
       }
@@ -617,6 +677,25 @@
         }
       }
 
+      // 儲存個人資訊 / 談資背景（直接寫回 Sheet 的個人資訊欄位）
+      async function savePersonalInfo(village, text) {
+        const item = contacts.find((c) => c.village === village);
+        if (item) {
+          item.personalInfo = text;
+        }
+
+        try {
+          await callGAS({
+            action: "updatePersonalInfo",
+            village: village,
+            info: text,
+          });
+          showSyncTip();
+        } catch (err) {
+          console.warn("個人資訊寫入 Sheet 失敗", err);
+        }
+      }
+
       function render() {
         const listEl = document.getElementById("checklist");
         listEl.innerHTML = "";
@@ -624,12 +703,13 @@
         const filtered = contacts.filter((item) => {
           const isDone = !!(item.statuses && item.statuses[currentRound]);
           const note = (item.notes && item.notes[currentRound]) || "";
+          const pInfo = item.personalInfo || "";
 
           if (currentFilter === "pending" && isDone) return false;
           if (currentFilter === "done" && !isDone) return false;
           if (queryText) {
             const full =
-              `${item.village} ${item.name} ${item.mobile} ${item.officePhone} ${item.address} ${note}`.toLowerCase();
+              `${item.village} ${item.name} ${item.party} ${item.birth} ${item.mobile} ${item.officePhone} ${item.homePhone} ${item.fax} ${item.address} ${item.termCount} ${item.unopposed} ${note} ${pInfo}`.toLowerCase();
             if (!full.includes(queryText)) return false;
           }
           return true;
@@ -655,6 +735,7 @@
         filtered.forEach((item) => {
           const isDone = !!(item.statuses && item.statuses[currentRound]);
           const note = (item.notes && item.notes[currentRound]) || "";
+          const pInfo = item.personalInfo || "";
 
           const card = document.createElement("div");
           card.className = `card ${isDone ? "is-done" : ""}`;
@@ -665,21 +746,39 @@
             <div class="village-title">
               <span class="badge badge-village">${item.village}</span>
               <span>${item.name} 里長</span>
-              <span style="font-size:0.8rem; color:#64748b;">(${item.gender || ""})</span>
+              <span style="font-size:0.85rem; color:#64748b;">(${item.gender || "性別未載"})</span>
             </div>
-            <div>
+            <div class="badge-group">
               ${item.party ? `<span class="badge badge-party">${item.party}</span>` : ""}
-              ${item.term ? `<span class="badge badge-term">${item.term}</span>` : ""}
+              ${item.termCount ? `<span class="badge badge-term">${item.termCount}</span>` : ""}
+              ${item.unopposed ? `<span class="badge badge-unopposed">${item.unopposed}</span>` : ""}
             </div>
           </div>
+
           <div class="info-grid">
             <div><strong>手機：</strong>${item.mobile ? `<a class="phone-link" href="tel:${item.mobile}">${item.mobile}</a>` : "無"}</div>
-            <div><strong>辦公處：</strong>${item.officePhone ? `<a class="phone-link" href="tel:${item.officePhone}">${item.officePhone}</a>` : "無"}</div>
-            ${item.homePhone ? `<div><strong>住家：</strong>${item.homePhone}</div>` : ""}
+            <div><strong>里辦電話：</strong>${item.officePhone ? `<a class="phone-link" href="tel:${item.officePhone}">${item.officePhone}</a>` : "無"}</div>
+            <div><strong>住宅電話：</strong>${item.homePhone ? `<a class="phone-link" href="tel:${item.homePhone}">${item.homePhone}</a>` : "無"}</div>
+            <div><strong>傳真機：</strong>${item.fax || "無"}</div>
+            <div><strong>生日：</strong>${item.birth || "未提供"}</div>
           </div>
-          <div class="address-line"><strong>處所：</strong>${item.address || "未提供"}</div>
+
+          <div class="address-line"><strong>服務處地址：</strong>${item.address || "未提供"}</div>
+
+          <!-- 折疊抽屜：個人資訊與談資 -->
+          <details class="personal-details">
+            <summary class="personal-summary">
+              <span>👤 個人背景與談資</span>
+              <span style="font-size:0.75rem; color:#9333ea; font-weight:normal;">(點擊展開/編輯)</span>
+            </summary>
+            <div class="personal-content">
+              <textarea class="personal-textarea" placeholder="填寫該里長的個人背景、談資話題、溝通風格、人脈關係等...（編輯完點旁邊自動同步至 Sheet）" onblur="savePersonalInfo('${item.village}', this.value)">${pInfo.replace(/</g, "&lt;")}</textarea>
+            </div>
+          </details>
+          
+          <!-- 當前輪次備註 -->
           <div class="note-row">
-            <input type="text" class="note-input" value="${note.replace(/"/g, "&quot;")}" placeholder="點此輸入本輪備註（輸入完點旁邊自動同步至 Sheet）..." onblur="saveNote('${item.village}', this.value)">
+            <input type="text" class="note-input" value="${note.replace(/"/g, "&quot;")}" placeholder="點此輸入【${currentRound}】聯繫備忘（例如：約定下週會勘）..." onblur="saveNote('${item.village}', this.value)">
           </div>
         </div>
       `;
