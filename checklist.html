@@ -1,0 +1,709 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>新興區里長聯絡追蹤清單</title>
+    <style>
+      :root {
+        --primary: #0284c7;
+        --primary-dark: #0369a1;
+        --bg: #f8fafc;
+        --card-bg: #ffffff;
+        --text: #0f172a;
+        --text-muted: #64748b;
+        --border: #e2e8f0;
+        --success: #16a34a;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      }
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        padding: 20px 14px;
+        line-height: 1.5;
+      }
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+
+      /* 頂部設定條（未設定或需要修改網址時顯示） */
+      .config-panel {
+        background: #eff6ff;
+        border: 1px solid #bfdbfe;
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .config-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: #1e40af;
+        margin-bottom: 8px;
+      }
+      .config-form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .config-input {
+        flex: 1;
+        min-width: 260px;
+        padding: 8px 12px;
+        border: 1px solid #93c5fd;
+        border-radius: 6px;
+        outline: none;
+      }
+      .btn-save-cfg {
+        background: #2563eb;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+
+      header {
+        background: white;
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        margin-bottom: 16px;
+      }
+      .header-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+      h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        color: var(--primary-dark);
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 7px 13px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        border: 1px solid var(--border);
+        background: white;
+      }
+      .btn-primary {
+        background: #0284c7;
+        color: white;
+        border-color: #0284c7;
+      }
+      .btn-primary:hover {
+        background: #0369a1;
+      }
+      .btn-outline {
+        color: #0284c7;
+        background: #f0f9ff;
+        border-color: #bae6fd;
+      }
+
+      .round-bar {
+        margin-top: 14px;
+        padding-top: 12px;
+        border-top: 1px solid #f1f5f9;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .round-select {
+        padding: 6px 10px;
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        font-size: 0.9rem;
+        font-weight: 600;
+        outline: none;
+        background: white;
+      }
+      .sync-badge {
+        font-size: 0.75rem;
+        color: #10b981;
+        font-weight: 600;
+        display: none;
+      }
+
+      .progress-box {
+        margin-top: 12px;
+      }
+      .stats-info {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 4px;
+      }
+      .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: #e2e8f0;
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progress-fill {
+        height: 100%;
+        width: 0%;
+        background: #0284c7;
+        transition: width 0.3s;
+      }
+
+      .controls {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 14px;
+        flex-wrap: wrap;
+      }
+      .search-input {
+        flex: 1;
+        min-width: 220px;
+        padding: 9px 12px;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        outline: none;
+        background: white;
+      }
+      .filter-btn-group {
+        display: flex;
+        gap: 6px;
+      }
+      .filter-btn {
+        padding: 8px 14px;
+        border: 1px solid var(--border);
+        background: white;
+        border-radius: 8px;
+        cursor: pointer;
+        color: var(--text-muted);
+        font-size: 0.85rem;
+      }
+      .filter-btn.active {
+        background: var(--primary);
+        color: white;
+        border-color: var(--primary);
+        font-weight: 600;
+      }
+
+      .checklist {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        gap: 12px;
+        align-items: flex-start;
+        transition: all 0.2s;
+      }
+      .custom-cb {
+        width: 22px;
+        height: 22px;
+        margin-top: 2px;
+        cursor: pointer;
+        accent-color: var(--primary);
+      }
+      .card-body {
+        flex: 1;
+      }
+      .card-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 6px;
+      }
+      .village-title {
+        font-size: 1.15rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .badge {
+        font-size: 0.75rem;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-weight: 600;
+      }
+      .badge-village {
+        background: #e0f2fe;
+        color: #0369a1;
+      }
+      .badge-party {
+        background: #f1f5f9;
+        color: #475569;
+      }
+      .badge-term {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 4px 12px;
+        font-size: 0.88rem;
+        margin-top: 6px;
+      }
+      .phone-link {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+      }
+      .phone-link:hover {
+        text-decoration: underline;
+      }
+      .address-line {
+        margin-top: 6px;
+        font-size: 0.85rem;
+        color: #475569;
+      }
+
+      .note-row {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px dashed var(--border);
+      }
+      .note-input {
+        width: 100%;
+        border: 1px solid #cbd5e1;
+        background: #f8fafc;
+        padding: 7px 10px;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        color: #1e293b;
+        outline: none;
+        transition: 0.2s;
+      }
+      .note-input:focus {
+        background: white;
+        border-color: var(--primary);
+      }
+
+      .card.is-done {
+        background: #f8fafc;
+        opacity: 0.65;
+      }
+      .card.is-done .village-title {
+        text-decoration: line-through;
+        color: var(--text-muted);
+      }
+      .loading-notice {
+        text-align: center;
+        padding: 40px;
+        color: var(--text-muted);
+        font-size: 0.95rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- 網址設定面板 -->
+      <div id="config-panel" class="config-panel">
+        <div class="config-title">
+          ⚙️ 設定 Google Apps Script 網頁應用程式網址
+        </div>
+        <div class="config-form">
+          <input
+            type="text"
+            id="cfg-url-input"
+            class="config-input"
+            placeholder="請貼上以 https://script.google.com/macros/s/.../exec 結尾的網址"
+          />
+          <button class="btn-save-cfg" onclick="saveConfigUrl()">
+            儲存並連線
+          </button>
+        </div>
+      </div>
+
+      <header>
+        <div class="header-top">
+          <h1>🏛️ 新興區里長聯絡追蹤清單</h1>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="startNewRound()">
+              ➕ 開啟新一輪聯繫
+            </button>
+            <button class="btn btn-outline" onclick="loadData()">
+              🔄 重新整理
+            </button>
+            <button class="btn" onclick="toggleConfigPanel()">
+              ⚙️ 設定網址
+            </button>
+          </div>
+        </div>
+
+        <div class="round-bar">
+          <label for="round-select" style="font-size: 0.9rem; font-weight: 600"
+            >當前輪次：</label
+          >
+          <select
+            id="round-select"
+            class="round-select"
+            onchange="switchRound(this.value)"
+          >
+            <option value="">讀取中...</option>
+          </select>
+          <span id="sync-tip" class="sync-badge">✅ 已自動同步至試算表</span>
+        </div>
+
+        <div class="progress-box">
+          <div class="stats-info">
+            <span id="stats-count">已聯繫：0 / 32 里</span>
+            <span id="stats-pct">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+      </header>
+
+      <div class="controls">
+        <input
+          type="text"
+          id="search-box"
+          class="search-input"
+          placeholder="🔍 搜尋里名、姓名、電話、地址、備註..."
+        />
+        <div class="filter-btn-group">
+          <button class="filter-btn active" data-filter="all">全部</button>
+          <button class="filter-btn" data-filter="pending">待聯繫</button>
+          <button class="filter-btn" data-filter="done">已完成</button>
+        </div>
+      </div>
+
+      <div class="checklist" id="checklist">
+        <div class="loading-notice">⏳ 正在連線讀取資料...</div>
+      </div>
+    </div>
+
+    <script>
+      let contacts = [];
+      let rounds = [];
+      let currentRound = "";
+      let currentFilter = "all";
+      let queryText = "";
+
+      function getSavedUrl() {
+        return localStorage.getItem("xinxing_gas_url") || "";
+      }
+
+      function toggleConfigPanel() {
+        const p = document.getElementById("config-panel");
+        p.style.display = p.style.display === "block" ? "none" : "block";
+        document.getElementById("cfg-url-input").value = getSavedUrl();
+      }
+
+      function saveConfigUrl() {
+        const val = document.getElementById("cfg-url-input").value.trim();
+        if (!val.startsWith("https://script.google.com/macros/s/")) {
+          alert(
+            "網址格式不正確，必須以 https://script.google.com/macros/s/ 開頭，且結尾需為 /exec",
+          );
+          return;
+        }
+        localStorage.setItem("xinxing_gas_url", val);
+        document.getElementById("config-panel").style.display = "none";
+        loadData();
+      }
+
+      // 通訊核心：優先使用 Fetch，失敗自動切換為 JSONP（防止瀏覽器 CORS 阻擋）
+      async function callGAS(params = {}) {
+        const baseUrl = getSavedUrl();
+        if (!baseUrl) throw new Error("NO_URL");
+
+        const url = new URL(baseUrl);
+        Object.keys(params).forEach((k) =>
+          url.searchParams.append(k, params[k]),
+        );
+
+        try {
+          const res = await fetch(url.toString(), {
+            method: "GET",
+            mode: "cors",
+          });
+          if (res.ok) return await res.json();
+        } catch (e) {
+          // Fetch 失敗時靜默轉交 JSONP
+        }
+
+        return new Promise((resolve, reject) => {
+          const cb =
+            "gas_cb_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+          url.searchParams.set("callback", cb);
+          const script = document.createElement("script");
+
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(
+              new Error(
+                "連線超時，請檢查 Apps Script 部署「誰可以存取」是否為「所有人」。",
+              ),
+            );
+          }, 15000);
+
+          function cleanup() {
+            clearTimeout(timer);
+            delete window[cb];
+            if (script.parentNode) script.parentNode.removeChild(script);
+          }
+
+          window[cb] = function (data) {
+            cleanup();
+            resolve(data);
+          };
+
+          script.onerror = function () {
+            cleanup();
+            reject(new Error("連線失敗，請檢查 Apps Script 網址或網路狀況。"));
+          };
+
+          script.src = url.toString();
+          document.body.appendChild(script);
+        });
+      }
+
+      function showSyncTip() {
+        const tip = document.getElementById("sync-tip");
+        tip.style.display = "inline";
+        setTimeout(() => {
+          tip.style.display = "none";
+        }, 2000);
+      }
+
+      async function loadData() {
+        const currentUrl = getSavedUrl();
+        if (!currentUrl) {
+          document.getElementById("config-panel").style.display = "block";
+          document.getElementById("checklist").innerHTML =
+            '<div class="loading-notice" style="color:#2563eb;">👋 首次使用，請先在上方貼入 Apps Script 網頁應用程式網址並按「儲存並連線」。</div>';
+          return;
+        }
+
+        document.getElementById("checklist").innerHTML =
+          '<div class="loading-notice">⏳ 正在同步試算表最新資料...</div>';
+
+        try {
+          const data = await callGAS();
+          if (!data.success) throw new Error(data.error || "讀取資料失敗");
+
+          contacts = data.contacts || [];
+          rounds = data.rounds || [];
+
+          // 若為全新表格無輪次欄位，自動發起第 1 輪
+          if (rounds.length === 0) {
+            await startNewRound(true);
+            return;
+          }
+
+          if (!currentRound || !rounds.includes(currentRound)) {
+            currentRound = rounds[rounds.length - 1];
+          }
+
+          updateRoundSelector();
+          render();
+        } catch (err) {
+          console.error(err);
+          document.getElementById("config-panel").style.display = "block";
+          document.getElementById("checklist").innerHTML =
+            `<div class="loading-notice" style="color:#ef4444; line-height:1.8;">
+          ❌ 連線失敗：${err.message}<br>
+          請點擊右上角「⚙️ 設定網址」確認網址是否正確，並確保 Apps Script 部署權限為「所有人」。
+        </div>`;
+        }
+      }
+
+      function updateRoundSelector() {
+        const sel = document.getElementById("round-select");
+        sel.innerHTML = rounds
+          .map(
+            (r) =>
+              `<option value="${r}" ${r === currentRound ? "selected" : ""}>${r}</option>`,
+          )
+          .join("");
+      }
+
+      function switchRound(rnd) {
+        currentRound = rnd;
+        render();
+      }
+
+      async function startNewRound(isInitial = false) {
+        const defaultTitle = `第${rounds.length + 1}輪 (${new Date().toLocaleDateString("zh-TW")})`;
+        const name = isInitial
+          ? defaultTitle
+          : prompt(
+              "請輸入新一輪名稱（將在 Sheet 建立狀態與備註兩欄）：",
+              defaultTitle,
+            );
+        if (!name) return;
+
+        document.getElementById("checklist").innerHTML =
+          '<div class="loading-notice">⏳ 正在試算表建立新欄位...</div>';
+
+        try {
+          const res = await callGAS({ action: "newRound", roundName: name });
+          if (res.success) {
+            currentRound = name;
+            await loadData();
+          }
+        } catch (err) {
+          alert("建立新欄位失敗：" + err.message);
+          loadData();
+        }
+      }
+
+      async function toggleDone(village, cbElement) {
+        const isChecked = cbElement.checked;
+        const item = contacts.find((c) => c.village === village);
+        if (item) {
+          if (!item.statuses) item.statuses = {};
+          item.statuses[currentRound] = isChecked;
+        }
+        render();
+
+        try {
+          await callGAS({
+            action: "updateStatus",
+            village: village,
+            roundName: currentRound,
+            status: isChecked,
+          });
+          showSyncTip();
+        } catch (err) {
+          console.warn("狀態寫入 Sheet 失敗", err);
+        }
+      }
+
+      async function saveNote(village, text) {
+        const item = contacts.find((c) => c.village === village);
+        if (item) {
+          if (!item.notes) item.notes = {};
+          item.notes[currentRound] = text;
+        }
+
+        try {
+          await callGAS({
+            action: "updateNote",
+            village: village,
+            roundName: currentRound,
+            note: text,
+          });
+          showSyncTip();
+        } catch (err) {
+          console.warn("備註寫入 Sheet 失敗", err);
+        }
+      }
+
+      function render() {
+        const listEl = document.getElementById("checklist");
+        listEl.innerHTML = "";
+
+        const filtered = contacts.filter((item) => {
+          const isDone = !!(item.statuses && item.statuses[currentRound]);
+          const note = (item.notes && item.notes[currentRound]) || "";
+
+          if (currentFilter === "pending" && isDone) return false;
+          if (currentFilter === "done" && !isDone) return false;
+          if (queryText) {
+            const full =
+              `${item.village} ${item.name} ${item.mobile} ${item.officePhone} ${item.address} ${note}`.toLowerCase();
+            if (!full.includes(queryText)) return false;
+          }
+          return true;
+        });
+
+        const total = contacts.length;
+        const doneCount = contacts.filter(
+          (c) => c.statuses && c.statuses[currentRound],
+        ).length;
+        const pct = total ? Math.round((doneCount / total) * 100) : 0;
+
+        document.getElementById("stats-count").innerText =
+          `已聯繫：${doneCount} / 全區共 ${total} 里`;
+        document.getElementById("stats-pct").innerText = `${pct}%`;
+        document.getElementById("progress-fill").style.width = `${pct}%`;
+
+        if (filtered.length === 0) {
+          listEl.innerHTML =
+            '<div class="loading-notice">無符合條件的里長資料</div>';
+          return;
+        }
+
+        filtered.forEach((item) => {
+          const isDone = !!(item.statuses && item.statuses[currentRound]);
+          const note = (item.notes && item.notes[currentRound]) || "";
+
+          const card = document.createElement("div");
+          card.className = `card ${isDone ? "is-done" : ""}`;
+          card.innerHTML = `
+        <input type="checkbox" class="custom-cb" ${isDone ? "checked" : ""} onchange="toggleDone('${item.village}', this)">
+        <div class="card-body">
+          <div class="card-header">
+            <div class="village-title">
+              <span class="badge badge-village">${item.village}</span>
+              <span>${item.name} 里長</span>
+              <span style="font-size:0.8rem; color:#64748b;">(${item.gender || ""})</span>
+            </div>
+            <div>
+              ${item.party ? `<span class="badge badge-party">${item.party}</span>` : ""}
+              ${item.term ? `<span class="badge badge-term">${item.term}</span>` : ""}
+            </div>
+          </div>
+          <div class="info-grid">
+            <div><strong>手機：</strong>${item.mobile ? `<a class="phone-link" href="tel:${item.mobile}">${item.mobile}</a>` : "無"}</div>
+            <div><strong>辦公處：</strong>${item.officePhone ? `<a class="phone-link" href="tel:${item.officePhone}">${item.officePhone}</a>` : "無"}</div>
+            ${item.homePhone ? `<div><strong>住家：</strong>${item.homePhone}</div>` : ""}
+          </div>
+          <div class="address-line"><strong>處所：</strong>${item.address || "未提供"}</div>
+          <div class="note-row">
+            <input type="text" class="note-input" value="${note.replace(/"/g, "&quot;")}" placeholder="點此輸入本輪備註（輸入完點旁邊自動同步至 Sheet）..." onblur="saveNote('${item.village}', this.value)">
+          </div>
+        </div>
+      `;
+          listEl.appendChild(card);
+        });
+      }
+
+      document.getElementById("search-box").addEventListener("input", (e) => {
+        queryText = e.target.value.trim().toLowerCase();
+        render();
+      });
+
+      document.querySelectorAll(".filter-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll(".filter-btn")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          currentFilter = btn.dataset.filter;
+          render();
+        });
+      });
+
+      loadData();
+    </script>
+  </body>
+</html>
