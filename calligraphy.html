@@ -17,7 +17,7 @@
           <div>
             <h1 class="text-lg font-bold">輓聯即時作業名冊</h1>
             <p class="text-xs text-slate-400">
-              年齡色標：70以下白 / 70~79粉紅 / 80以上正紅
+              年齡色標：70以下白 / 70~79粉紅 / 80以上正紅 ｜ 3天內急件自動置頂
             </p>
           </div>
         </div>
@@ -65,7 +65,12 @@
             >0</span
           >
         </div>
-        <div class="flex items-center gap-3 text-xs font-medium">
+        <div class="flex flex-wrap items-center gap-3 text-xs font-medium">
+          <span
+            class="flex items-center gap-1 text-rose-700 font-bold bg-rose-50 px-2 py-0.5 rounded border border-rose-200"
+          >
+            🔥 3天內急件 (置頂)
+          </span>
           <span class="flex items-center gap-1"
             ><span
               class="w-3 h-3 rounded bg-white border border-slate-400 inline-block shadow-sm"
@@ -145,6 +150,30 @@
         return match ? parseInt(match[0], 10) : null;
       }
 
+      // 計算告別式距離今天的天數
+      function getDaysUntilService(dateStr) {
+        if (!dateStr) return null;
+        const match = String(dateStr).match(
+          /(\d{4})[年\/-](\d{1,2})[月\/-](\d{1,2})/,
+        );
+        if (!match) return null;
+
+        const year = parseInt(match[1], 10);
+        const month = parseInt(match[2], 10) - 1;
+        const day = parseInt(match[3], 10);
+
+        const targetDate = new Date(year, month, day);
+        const today = new Date();
+        const currentDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+        );
+
+        const diffTime = targetDate.getTime() - currentDate.getTime();
+        return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      }
+
       // 依年齡決定底色與文字色
       function getAgeColorTheme(ageNum) {
         if (ageNum === null) {
@@ -199,6 +228,19 @@
             return;
           }
 
+          // 核心排序：3天內急件置頂，急件內部天數小的排前面
+          list.sort((a, b) => {
+            const daysA = getDaysUntilService(a.serviceDate);
+            const daysB = getDaysUntilService(b.serviceDate);
+            const isUrgentA = daysA !== null && daysA <= 3;
+            const isUrgentB = daysB !== null && daysB <= 3;
+
+            if (isUrgentA && !isUrgentB) return -1;
+            if (!isUrgentA && isUrgentB) return 1;
+            if (isUrgentA && isUrgentB) return daysA - daysB; // 急件之間越趕越前面
+            return 0; // 非急件維持原本的倒序排列
+          });
+
           renderCards(list);
         } catch (err) {
           alert("名單載入失敗，請確認 Apps Script 部署狀態: " + err.message);
@@ -216,14 +258,44 @@
           const ageNum = parseAgeNumber(item.age);
           const theme = getAgeColorTheme(ageNum);
 
+          // 判斷是否為 3 天內急件
+          const daysLeft = getDaysUntilService(item.serviceDate);
+          const isUrgent = daysLeft !== null && daysLeft <= 3;
+
+          let urgentBadge = "";
+          let serviceBoxStyle =
+            "bg-white/80 p-2.5 rounded-lg border border-slate-200";
+
+          if (isUrgent) {
+            let urgentText = "";
+            if (daysLeft < 0) {
+              urgentText = "🔥 急件：已到期或本日";
+            } else if (daysLeft === 0) {
+              urgentText = "🔥 急件：今天出殯！";
+            } else if (daysLeft === 1) {
+              urgentText = "🔥 急件：明天出殯！";
+            } else {
+              urgentText = `🔥 急件：剩餘 ${daysLeft} 天！`;
+            }
+
+            urgentBadge = `
+              <span class="text-xs px-2.5 py-1 rounded-md bg-rose-600 text-white font-black animate-pulse flex items-center gap-1 shadow-sm">
+                ${urgentText}
+              </span>
+            `;
+            serviceBoxStyle =
+              "bg-rose-50 p-2.5 rounded-lg border-2 border-rose-500 shadow-sm";
+          }
+
           const card = document.createElement("div");
           card.id = "card-" + item.rowId;
-          card.className = `p-5 rounded-2xl border transition-all duration-300 hover:shadow-md ${theme.cardBg} flex flex-col lg:flex-row lg:items-center justify-between gap-5`;
+          card.className = `p-5 rounded-2xl border transition-all duration-300 hover:shadow-md ${theme.cardBg} ${isUrgent ? "ring-2 ring-rose-400" : ""} flex flex-col lg:flex-row lg:items-center justify-between gap-5`;
 
           card.innerHTML = `
           <div class="flex-1 space-y-3">
-            <!-- 年齡標籤與列號 -->
+            <!-- 年齡標籤、急件標籤與列號 -->
             <div class="flex flex-wrap items-center gap-2">
+              ${urgentBadge}
               <span class="text-xs px-2.5 py-1 rounded-md ${theme.tagBg}">
                 ${item.age} • ${theme.desc}
               </span>
@@ -240,10 +312,12 @@
 
             <!-- 詳細資訊：出殯時間、停靈處、告別式地點 三者獨立分開顯示 -->
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs pt-1">
-              <!-- 出殯時間 -->
-              <div class="bg-white/80 p-2.5 rounded-lg border border-slate-200">
-                <span class="font-bold text-indigo-700 block mb-0.5">📅 出殯時間</span>
-                <span class="font-medium text-slate-800">${item.serviceDate || "未註明"}</span>
+              <!-- 出殯時間 (若是急件則加粗紅框醒目) -->
+              <div class="${serviceBoxStyle}">
+                <span class="font-bold ${isUrgent ? "text-rose-700" : "text-indigo-700"} block mb-0.5">
+                  📅 出殯時間 ${isUrgent ? "(即將出殯)" : ""}
+                </span>
+                <span class="font-bold text-slate-900">${item.serviceDate || "未註明"}</span>
               </div>
 
               <!-- 停靈地點 (獨立) -->
